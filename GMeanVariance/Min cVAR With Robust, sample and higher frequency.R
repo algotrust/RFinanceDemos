@@ -9,6 +9,8 @@
 #' 
 #' Inputs: A list of ETF symbols, and the benchmark Symbol
 #' 
+#' 
+#' TODO: walkforward testing, to check for accidental prediciton with next period returns (HT Chris McDonald)
 
 # debugging
 #options(warn=2)
@@ -30,15 +32,20 @@ etflist <- c("TLT","SPY","XLB","XLV","XLP","XLY","XLE","XLF","XLI","XLK","XLU")
 getSymbols(etflist,from="2003-12-01", to = "2013-05-01")
 benchlist <- "SPY"
 tickers <- etflist 
-
+outfile <- "out.txt"
 ## Make matrix of Returns code stolen from vignette of deoptim
 P <- NULL
 seltickers <- NULL
+write('By Month \n', file=outfile)
 for(ticker in tickers){
   tmp <- Ad(to.monthly(eval(parse(text=ticker))))
+  wrtline <- paste("ticker ", ticker, "tmp", tmp, "\n")
+  write(wrtline, file=outfile)
   if(is.null(P)){ timeP <- time(tmp) }
   if(any(time(tmp)!=timeP)) next
   else P <- cbind(P,as.numeric(tmp))
+  wrtline <- paste("ticker ", ticker, "date ", timeP, " tmp", tmp, "\n")
+  write(wrtline, file=outfile)
   seltickers <- c(seltickers,ticker)
 }
 
@@ -47,10 +54,25 @@ colnames(P) <- seltickers
 #
 # TODO: use simple returns, not log
 #
+write('P', file=outfile)
+write(P, file=outfile)
 R <- diff(log(P))
+write("R log returns of P", file=outfile)
+write(R, file=outfile)
+#head(R)
+#chart.CumReturns(P,legend.loc="topleft", main="Cumulative Daily Returns")
+#chart.CumReturns(TLT$TLT.Adjusted,legend.loc="topleft", main="Cumulative Daily Returns")
 R <- R[-1,]
 returnsDiscrete <- CalculateReturns(P, method='discrete')
+write("Discrete returns", file=outfile)
+write(returnsDiscrete, file=outfile)
 returnsLog <- CalculateReturns(P, method='log')
+write("Log returns", file=outfile)
+write(returnsLog, file=outfile)
+
+#head(returnsLog)
+#head(returnsDiscrete)
+
 
 numperiods = nrow(P)
 numreturns = nrow(R)
@@ -150,7 +172,8 @@ rp <- rp/rowSums(rp)
 controlDE <- list(reltol=0.00001, steptol=150, itermax=2000, 
                   trace=250, NP=as.numeric(nrow(rp)),
                   initialpop=rp,strategy=6, c=0)
-# in real use, remove the set.seed() line to change the RNG start
+# Remove the set.seed() line to change the RNG start. 
+# It is set to replicate results for testing.
 set.seed(1234)
 
 preturn <- R
@@ -265,27 +288,31 @@ blob=merge.xts(portreturn_minsd_cov,R2)
 
 ### Max Sharpe
 
-for (i in 2:numreturns){ 
-  rollR <- first(R, i)
-  mu <- colMeans(rollR)
-  sigma <- cov(rollR)
-  weightvec <- DEoptim(fn=objectivefunsr, lower=lower,
-                       upper=upper, control=controlDE)
-  preturn[i+1,] <- weightvec$optim$bestmem*R[i]
-  optweights[i+1,] <- weightvec$optim$bestmem
-}
-portreturn_maxsr_cov <- optweights2*R
-portreturn_maxsr_cov <- rowSums(portreturn_maxsr_cov)
-portreturn_maxsr_cov <- xts(portreturn_maxsr_cov, order.by=index(R))
+##for (i in 2:numreturns){ 
+##  rollR <- first(R, i)
+##  mu <- colMeans(rollR)
+##  sigma <- cov(rollR)
+##  weightvec <- DEoptim(fn=objectivefunsr, lower=lower,
+##                       upper=upper, control=controlDE)
+##  preturn[i+1,] <- weightvec$optim$bestmem*R[i]
+##  optweights[i+1,] <- weightvec$optim$bestmem
+##}
+##portreturn_maxsr_cov <- optweights2*R
+##portreturn_maxsr_cov <- rowSums(portreturn_maxsr_cov)
+##portreturn_maxsr_cov <- xts(portreturn_maxsr_cov, order.by=index(R))
 
-colnames(portreturn_maxsr_cov) <- "MaxSR_cov"
-OOSweights_maxsr_cov <- weightvec$optim$bestmem/sum(weightvec$optim$bestmem)
+##colnames(portreturn_maxsr_cov) <- "MaxSR_cov"
+##OOSweights_maxsr_cov <- weightvec$optim$bestmem/sum(weightvec$optim$bestmem)
+#
+# REMOVE
+portreturn_maxsr_cov <- R2 # set to benchmark
 
 colofassets <- merge.xts(portreturn_minsd_cov, 
                          R2, 
                          portreturn_rob, 
                          portreturn_covd, 
-                         portreturn_maxsr_cov)
+                         portreturn_maxsr_cov
+                         )
 #colofassets2 <- colofassets['2007-12-31/2013-05-01']
 
 chart.CumReturns(colofassets, wealth.index=TRUE, legend.loc="topleft")
