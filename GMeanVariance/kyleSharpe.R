@@ -1,8 +1,5 @@
-#clear workspace (for testing)
-rm(list = ls())
-options(warn=2)
-options(error=dump.frames)
-
+# set Time Zone
+Sys.setenv(TZ='UTC')
 
 #load libraries
 require(quantmod)
@@ -10,8 +7,7 @@ require(PerformanceAnalytics)
 require(blotter)
 require(FinancialInstrument)
 require(quantstrat)
-require(forecast)
-require(foreach)
+
 
 #clear portfolio and acct not needed due to the clearing workspace but here incase you don't use it.
 suppressWarnings(rm("account.stocky","portfolio.stocky",pos=.blotter))
@@ -19,8 +15,11 @@ suppressWarnings(rm("order_book.stocky",pos=.strategy))
 suppressWarnings(rm(stocky))
 
 if (!exists('.blotter')) .blotter <- new.env()
-if (!exists('.strategf')) .strategy <- new.env()
+if (!exists('.strategy')) .strategy <- new.env()
+if (!exists('.instrument')) .strategy <- new.env()
+
 #if your stock is different you need to change (initdate,initportf,addposlimit, chart.posn)
+symbols <- c("SPY")
 symbol = "SPY"
 
 #Set up currencies
@@ -30,7 +29,7 @@ currency("USD")
 stock(symbol, currency="USD", multiplier = 1)
 
 ####################################################### Get Data #################################################
-getSymbols(symbol,src="yahoo",from = "2000-01-01" )
+getSymbols(symbol,src="yahoo",from = "2010-01-01" )
 
 #Set Initial Date and Equity, note change SPY to your stock of choice.
 initDate = start(SPY)
@@ -182,26 +181,19 @@ stratstocky <- add.rule(stratstocky,
 
 ##############################    Apply Strategy ##############################################
 
-mktdata <- SPY
-outai <- applyIndicators(strategy=stratstocky, mktdata)
-#applyStrategy() creates mktdata, runs applyIndicators(), then  applySignals(), 
-#then applyRules()
-outas <- applySignals(strategy=stratstocky, mktdata)
-head(mktdata)
-outar <- applyRules(portfolio="stocky", mktdata=mktdata, strategy=stratstocky )
-head(mktdata)
-out <- applyStrategy(strategy=stratstocky, portfolios="stocky")
+applyStrategy(strategy=stratstocky, portfolios="stocky")
 
-stratstocky
 updatePortf("stocky")
-
+getOrderBook('stocky')
 ############################# Portfolio Return Characterics ################################
+
 #get portfolio data
 portRet <- PortfReturns("stocky")
 portRet$Total <- rowSums(portRet, na.rm=TRUE)
 charts.PerformanceSummary(portRet$Total)
+
 #tradeStats("stocky")[,c("Symbol","Num.Trades","Net.Trading.PL","maxDrawdown")]
 #change SPY to your stock choice
-chart.Posn("stocky","SPY")
+chart.Posn("stocky","SPY", Dates='2000/')
 results1<-getTxns("stocky","SPY")
 #plot(results1$Net.Txn.Realized.PL)
