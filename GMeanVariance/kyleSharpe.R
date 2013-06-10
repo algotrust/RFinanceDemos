@@ -1,5 +1,5 @@
 # set Time Zone
-Sys.setenv(TZ='UTC')
+#Sys.setenv(TZ='UTC')
 
 #load libraries
 require(quantmod)
@@ -13,10 +13,6 @@ require(quantstrat)
 suppressWarnings(rm("account.stocky","portfolio.stocky",pos=.blotter))
 suppressWarnings(rm("order_book.stocky",pos=.strategy))
 suppressWarnings(rm(stocky))
-
-if (!exists('.blotter')) .blotter <- new.env()
-if (!exists('.strategy')) .strategy <- new.env()
-if (!exists('.instrument')) .strategy <- new.env()
 
 #if your stock is different you need to change (initdate,initportf,addposlimit, chart.posn)
 symbols <- c("SPY")
@@ -192,7 +188,7 @@ portRet <- PortfReturns("stocky")
 portRet$Total <- rowSums(portRet, na.rm=TRUE)
 charts.PerformanceSummary(portRet$Total)
 
-#tradeStats("stocky")[,c("Symbol","Num.Trades","Net.Trading.PL","maxDrawdown")]
+tradeStats("stocky")[,c("Symbol","Num.Trades","Net.Trading.PL","Max.Drawdown")]
 #change SPY to your stock choice
 chart.Posn("stocky","SPY", Dates='2000/')
 results1<-getTxns("stocky","SPY")
