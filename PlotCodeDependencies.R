@@ -1,5 +1,0 @@
-thefiles = list.files()
-sapply(thefiles,source)
-library(mvbutils)
-par(mar=rep(0.1,4))
-foodweb(border=TRUE,boxcolor="pink",lwd=1.5,cex=0.8)
