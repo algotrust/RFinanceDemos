@@ -1,4 +1,4 @@
-#
+# Evelyn Mitchell (c) 2013
 # Clustering a group of instruments based on similarity of returns
 # 
 # Following on jab's request, and modifying Soren's code to use the
