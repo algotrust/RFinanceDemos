@@ -1,0 +1,91 @@
+[13:51] <braverock> so, I promised I would talk a little about adaptive differential evolution
+[13:52] <braverock> the technique came out of a bunch of IEEE papers, but the book is here:
+  [13:52] <braverock> http://www.amazon.com/Adaptive-Differential-Evolution-Multimodal-Optimization/dp/3642015263
+[13:52] * kylebalkissoon fires up the book piracy toolkit
+[13:52] <braverock> the big key here is a couple of extra parameters to DEoptim-control
+[13:53] <braverock> first, to use JADE, the adaptive version of the algo, strategy=6
+[13:54] <braverock> then you can set parameters p and c
+[13:54] <braverock> p is the stored population percentage, from 0-1
+[13:54] <braverock> I typically use something in the .2 range for portfolio optimization
+[13:55] <braverock> telling it to keep the 20% best population members and use them as a basis for mutations in the next generation
+[13:55] <kylebalkissoon> whats the default of p?
+[13:55] <braverock> c is how fast the rest of the adaptation of parameters occurs.  I like .5
+[13:55] <braverock> p defaults to 0, iirc
+[13:55] <kylebalkissoon> 0.2 :)
+[13:56] <kylebalkissoon> I just pulled up all the documentations in front of me
+[13:56] --> statarb3 has joined this channel (~CoreD@unaffiliated/statarb3).
+[13:56] <kylebalkissoon> to follow along better
+[13:56] <braverock> fundamentally, the issue with differential evolution is that there are a lot of knobs and levers, and getting the best convergence rate requires setting a lot of parameters
+[13:57] <statarb3> could one of the ops overhere change the topic entrance, since well R/Finance is not coming until another year, maybe instead put up the link to the presentations :)
+[13:57] <braverock> so the c parameter tells the JADE algorithm to adapt those aprameters automatically, with low numbers, close ot 0, saying don't be too agressive, and high numbers, close to 1, telling it to be very aggressive
+[13:57] <statarb3> evening btw
+[13:57] <braverock> brb
+[13:57] <kylebalkissoon> ok
+[13:58] <braverock> hmm, I can't figure out how to exit and come back in to change the topic
+[13:58] <braverock> I'll do it later, unless _joe or opentrades beats me to it
+[13:58] *** ChanServ gives channel operator privileges to braverock.
+[13:58] <statarb3> lol, well i don't know either, but i think _joe should know it
+[13:58] * _joe knew
+[13:59] <braverock> so anyway, by setting strategy=6, p=.2, and c=.5, or something like that, you should get significantly faster convergence
+[13:59] <braverock> well, I can ask Chansev to op me, I suppose
+[13:59] <braverock> ^r
+[13:59] <_joe> you are opped
+[13:59] <braverock> heh
+[13:59] * _joe already asked ChanServ
+[13:59] <braverock> yeah, I see that
+[13:59] <_joe> cool :)
+[14:00] <braverock> looks like joe changed the topic too?
+[14:00] *** braverock takes channel operator privileges from braverock.
+[14:00] <_joe> no, i didn't
+[14:00] <-- statarb3 has left this channel.
+[14:00] --> statarb3 has joined this channel (~CoreD@unaffiliated/statarb3).
+[14:00] <kylebalkissoon> let me check the topic
+[14:00] <-- kylebalkissoon has left this channel.
+[14:00] --> kylebalkissoon has joined this channel (~kylebalki@CPE744401d2d64e-CM78cd8eca5655.cpe.net.cable.rogers.com).
+[14:00] <statarb3> no its still there
+[14:00] <braverock> well, there's no mention of R/Finance, the conference, in the current topic, at least not on the server I'm on
+[14:00] <kylebalkissoon> Topic: Welcome to #R-Finance, the channel for trading, computational finance, quantitative finance, and financial engineering using R. Please be very patient for answers.
+[14:00] <kylebalkissoon> <ChanServ whispers>[#R-Finance] Welcome to #R-Finance, the channel for computational finance, quantitative finance and financial engineering using R. Please be very patient for answers. Join us at the yearly R/Finance conference on May 17/18, 2013 in Chicago USA: http://www.rinfinance.com/
+[14:00] <braverock> (02:59:07 PM) current topic is: Welcome to #R-Finance, the channel for trading, computational finance, quantitative finance, and financial engineering using R. Please be very patient for answers.
+[14:01] <kylebalkissoon> stararb you're referring to the chanserv message
+[14:01] <kylebalkissoon> not the topic
+[14:01] <statarb3> ah yes, well that was what i meant :)
+[14:01] <kylebalkissoon> iirc my irc correctly its in the greetings
+[14:01] *** ChanServ gives channel operator privileges to braverock.
+[14:03] <_joe> is that the ENTRYMSG?
+[14:03] <braverock> gotta be
+[14:03] <_joe> i think it's something like SET ENTRYMSG <message>, to ChanServ
+[14:04] <efm> braverock do you have a probing technique for setting those parameters, or do you always use the same ones?
+[14:05] <braverock> well, part of the point is that it should matter a lot less, once you're in the right ballpark
+[14:05] <braverock> but no, the only way in the literature to figure out the 'right' ones is to search the parameter space and measure the quality of your converged values/time
+[14:09] <efm> is the right ballpark dependent on the specific optimization you're doing? or is the ballpark mostly the same for financial optimizations? (I should just test this..)
+[14:09] <braverock> seems mostly the same for all portfolio optimization problems I've tested
+[14:09] --> Pact has joined this channel (~Pact@unaffiliated/pact).
+[14:09] <efm> ok that helps a lot
+[14:10] <braverock> I'd like to replicate some of the convergence tests they show in the book generally for DEoptim, and specifically for PortA
+[14:10] <-- Pact_ has left this server (Ping timeout: 240 seconds).
+[14:14] <efm> braverock: I think I may be up to that
+http://cran.r-project.org/web/packages/cec2013/
+
+
+
+[14:23] <braverock> the benchmark fn's for optimizers are pretty well known, usually simple one-liners
+[14:23] <braverock> see package cec2013 and cec2005 for the standard engineering benchmarks
+[14:24] <braverock> cec2013 does these: http://www.ntu.edu.sg/home/EPNSugan/index_files/CEC2013/Definitions%20of%20%20CEC%2013%20benchmark%20suite%200117.pdf
+[14:24] <braverock> and then we'd need to come up with some portfolio optimization benchmarks
+[14:27] <kylebalkissoon> quadprog?
+[14:28] <kylebalkissoon> optim
+[14:28] <braverock> lol
+[14:28] <kylebalkissoon> i mean as the benchmarks
+[14:28] <kylebalkissoon> and those suck
+[14:28] <braverock> heh
+[14:28] <kylebalkissoon> quadprog fails on GMV probems generally
+[14:28] <kylebalkissoon> i.e. quadprog failed on TSX 60 GMV long only
+[14:28] <kylebalkissoon> before we introduced other constraints
+[14:29] * braverock is more used to feasible spaces that look closer to the cec benchmarks
+[14:32] <kylebalkissoon> CEC?
+[14:36] <braverock> http://www.ntu.edu.sg/home/EPNSugan/index_files/CEC2013/Definitions%20of%20%20CEC%2013%20benchmark%20suite%200117.pdf
+[14:36] <braverock> engineering optimization competition
+[14:40] <kylebalkissoon> I read the link, I just can't find what the acronym stands for haha
+[14:40] <kylebalkissoon> Congress on Evolutionary Computation
+[14:45] * braverock has used the cec2005 benchmarks in the past to test things, but I'm happy to see that they published the CEC2013 benchmarks 
